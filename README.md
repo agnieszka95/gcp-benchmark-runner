@@ -1,6 +1,6 @@
 # Benchmark automation tool
 
-This project automates the execution and logging of `plonky2` benchmarks on Google Cloud Platform (GCP). The tool schedules benchmark jobs to run on GCP virtual machines, collects output logs, and stores them in a Google Cloud Storage (GCS) bucket for retrieval and analysis.
+This tool allows users to schedule and run benchmarks for the Plonky2 zk-SNARK library on Google Cloud Platform (GCP). The benchmarks are executed using Docker containers on GCP VMs, and the results are uploaded to Google Cloud Storage (GCS) for later retrieval and analysis.
 
 ## Features
 
@@ -33,10 +33,13 @@ Before using this tool, ensure you have the following:
 
 ### Google Cloud Platform setup
 
+### GCP Setup
+
 1. **Enable APIs:** Ensure the following APIs are enabled in GCP project:
    - Compute Engine API
    - Cloud Storage API
    - Cloud IAM API
+   - Artifact Registry API
 
 2. **GCP CLI Installed:** Install and configure the GCP CLI on local machine:
    ```bash
@@ -48,12 +51,29 @@ Before using this tool, ensure you have the following:
    - `roles/compute.admin`
    - `roles/storage.admin`
 
-### Environment Setup
 
-- Install the following on local machine:
-  - Bash
-  - Google Cloud SDK (`gcloud`)
-  - Docker
+4. **Set Up an Artifact Registry**:
+   Create a repository:
+   ```bash
+   gcloud artifacts repositories create plonky2-repo \
+       --repository-format=docker \
+       --location=us-west1 \
+       --description="Repository for Plonky2 benchmark Docker images"
+
+   gcloud auth configure-docker us-west1-docker.pkg.dev
+   ```
+
+### Local Environment Setup
+1. Install the Google Cloud SDK: [Installation Guide](https://cloud.google.com/sdk/docs/install and Docker.
+2. Authenticate with your GCP account:
+   ```bash
+   gcloud auth login
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+3. Ensure the `setup_vm.sh` script is executable:
+   ```bash
+   chmod +x scripts/setup_vm.sh
+   ```
 
 ---
 
@@ -61,7 +81,7 @@ Before using this tool, ensure you have the following:
 
 ### Step 1: Build the Docker image
 
-Build the Docker image locally and push it to Google Artifact Registry:
+Build the Docker image locally and push it to Artifact Registry:
 
 1. Build the image:
    ```bash
@@ -70,7 +90,6 @@ Build the Docker image locally and push it to Google Artifact Registry:
 
 2. Push the image to the Artifact Registry:
    ```bash
-   gcloud auth configure-docker us-west1-docker.pkg.dev
    docker push us-west1-docker.pkg.dev/<project-id>/plonky2-repo/plonky2-benchmarker:1.0.0
    ```
 
@@ -85,34 +104,31 @@ Build the Docker image locally and push it to Google Artifact Registry:
 
 1. Execute the `setup_vm.sh` script to create the VM:
    ```bash
-   chmod +x setup_vm/setup_vm_and_schedule.sh
-   bash setup_vm.sh
+   ./setup_vm/setup_vm.sh <INSTANCE_NAME> <MACHINE_TYPE> <CORES> <RAM>
    ```
+   
+   #### Parameters:
+   - `<INSTANCE_NAME>`: Name of the VM instance (e.g., `benchmark-instance`).
+   - `<MACHINE_TYPE>`: Type of machine. Use `custom` for custom configurations or predefined types like `e2-standard-2`.
+   - `<CORES>`: Number of CPU cores, e.g., "2".
+   - `<RAM>`: RAM, e.g., "8GB" or "8192MB".
+
    Modify the script variables as necessary:
    - `PROJECT_ID`
    - `ZONE`
   
-   For a custom machine (e.g., 8 cores and 8192MB of RAM):
-   ```bash
-     ./setup_vm/setup_vm_and_schedule.sh benchmark-instance custom 8 8192MB
-   ```
-
-   This command will:
-
-   Create a VM named benchmark-instance with a custom machine type. Configure the VM with 8 CPU cores and 8192MB of RAM.
-
-   For a predefined machine (e.g., e2-standard-2):
-   ```bash
-   ./setup_vm/setup_vm_and_schedule.sh benchmark-instance e2-standard-2 2 8192MB
-   ```
-
-   This command will:
-
-   Create a VM with the e2-standard-2 machine type. Configure the VM with 2 CPU cores and 8192MB of RAM.
-
-2. The script will:
-   - Create a VM instance.
-   - Install Docker and set up a cron job to periodically run the benchmark.
+   #### Example:
+   - **Custom Machine**:
+     ```bash
+     ./setup_vm/setup_vm.sh benchmark-instance custom 4 8192MB
+     ```
+   - **Predefined Machine**:
+     ```bash
+     ./setup_vm/setup_vm.sh benchmark-instance e2-standard-2 2 8192MB
+     ```
+     
+   This script sets up a VM in GCP and schedules the benchmark execution script.
+   
 
 ### Step 4: Verify Logs
 
@@ -123,70 +139,61 @@ Build the Docker image locally and push it to Google Artifact Registry:
 
 ---
 
+
+#### Overview:
+
 ## Tool Design
 
 ### Components
 
-1. **Dockerfile**
-   - Prepares a container with the Rust nightly toolchain and `plonky2` benchmarks.
-   - Ensures consistency in the benchmark environment.
-  
-2. **startup_script.sh**
-   - Configures the VM by creating a user (myuser), installs Google Cloud SDK and Docker, and schedules the benchmark_execution.sh script to run every 3 hours using cron.
+The tool leverages the following components:
+- **Dockerfile**: A containerized environment to run Plonky2 benchmarks with Rust nightly and necessary dependencies pre-installed.
+- **GCP VM**: Instances created dynamically to execute the benchmarks.
+- **Startup script**: Automates the environment setup on the VM.
+- **Benchmark execution script**: Runs the Dockerized benchmark and uploads the results to GCS.
 
-3. **setup_vm.sh**
-   - Accepts parameters for instance name, machine type, CPU cores, and RAM.
-   - Creates a VM on GCP, attaches the startup script, and configures the VM to run the benchmark periodically.
-
-4. **benchmark_execution.sh**
-   - Executes the benchmark inside the Docker container.
-   - Logs the output and uploads it to GCS.
-
-### Workflow
-
-1. **Setup**
-   - The VM is provisioned and configured.
-   - Docker is installed, and a benchmark script is scheduled.
-
-2. **Execution**
-   - The benchmark script runs periodically.
-   - Output logs are collected and uploaded to GCS.
-
-3. **Log Retrieval**
-   - Logs are available in GCS for further analysis.
+#### Workflow:
+1. `setup_vm.sh` creates a VM and sets up the startup script.
+2. The startup script installs dependencies and schedules the `benchmark_execution.sh` script to run every 3 hours via cron.
+3. `benchmark_execution.sh` pulls the Docker image, runs the benchmark, and uploads the log to GCS.
 
 ---
 
-## Testing
 
-### Local Testing
+### Testing the Tool
 
-1. Build the Docker container locally:
-   ```bash
-   docker build -t plonky2-benchmarker .
-   ```
+#### Steps:
+1. **Local test**:
+   - Build and run the Docker container locally:
+     ```bash
+     docker build -t plonky2-bench .
+     docker run --rm plonky2-bench
+     ```
+   - Ensure the benchmark runs successfully and produces output.
 
-2. Run the container to verify the benchmark:
-   ```bash
-   docker run --rm plonky2-benchmarker
-   ```
+2. **GCP test**:
+   - Run the `setup_vm.sh` script with a test configuration:
+     ```bash
+     ./scripts/setup_vm_and_schedule.sh test-instance custom 2 2048MB
+     ```
+   - Verify that the VM is created and the startup script runs without errors.
 
-### GCP Testing
+3. **Check outputs**:
+   - Navigate to the GCS bucket:
+     ```bash
+     gsutil ls gs://YOUR_BUCKET_NAME/
+     ```
+   - Verify the benchmark logs are uploaded.
 
-1. Verify the VM is created successfully:
-   ```bash
-   gcloud compute instances list
-   ```
+## Notes
 
-2. Verify the benchmark script is running inside the VM:
-   ```bash
-   gcloud compute ssh <instance-name> --command "crontab -l"
-   ```
+- Logs are stored in the GCS bucket under the path:
+  ```
+  gs://YOUR_BUCKET_NAME/<INSTANCE_NAME>/<DATE>/benchmark.log
+  ```
 
-3. Check for logs in the GCS bucket:
-   ```bash
-   gsutil ls gs://<bucket-name>/
-   ```
+- Ensure IAM permissions for the service account running the VM to access the GCS bucket and Artifact Registry.
+
 
 ---
 
@@ -294,18 +301,18 @@ images:
 ## Known Limitations
 
 - The VM creation process assumes default network and firewall configurations.
-- Benchmark scheduling frequency is fixed in the script (every 30 minutes).
+- Benchmark scheduling frequency is fixed in the script (every 3 hours).
 
 ---
 
 ## Future Improvements
 
 - Add error handling to scripts.
-- Implement a dynamic schedule configuration for benchmarks -> Event-driven execution: trigger benchmarks based on events such as receiving a Pub/Sub message or an API request.
+- Implement a dynamic schedule configuration for benchmarks -> Event-driven execution: trigger benchmarks based on events such as receiving a Pub/Sub message or an API request. Due to some restrictions I'm not able to use Cloud Functions/Cloud Run at the moment.
 - Integrate monitoring and alerting for failed benchmarks.
 
 ---
 
 ## Contact
 
-For questions or feedback, please reach out.
+Enjoy benchmarking with this tool!
