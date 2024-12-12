@@ -92,23 +92,23 @@ Build the Docker image locally and push it to Google Artifact Registry:
    - `PROJECT_ID`
    - `ZONE`
   
-  For a custom machine (e.g., 8 cores and 8192MB of RAM):
-  ```bash
-  ./setup_vm/setup_vm_and_schedule.sh benchmark-instance custom 8 8192MB
-  ```
+   For a custom machine (e.g., 8 cores and 8192MB of RAM):
+   ```bash
+     ./setup_vm/setup_vm_and_schedule.sh benchmark-instance custom 8 8192MB
+   ```
 
-  This command will:
+   This command will:
 
-  Create a VM named benchmark-instance with a custom machine type. Configure the VM with 8 CPU cores and 8192MB of RAM.
+   Create a VM named benchmark-instance with a custom machine type. Configure the VM with 8 CPU cores and 8192MB of RAM.
 
-  For a predefined machine (e.g., e2-standard-2):
-  ```bash
-  ./setup_vm/setup_vm_and_schedule.sh benchmark-instance e2-standard-2 2 8192MB
-  ```
+   For a predefined machine (e.g., e2-standard-2):
+   ```bash
+   ./setup_vm/setup_vm_and_schedule.sh benchmark-instance e2-standard-2 2 8192MB
+   ```
 
-  This command will:
+   This command will:
 
-  Create a VM with the e2-standard-2 machine type. Configure the VM with 2 CPU cores and 8192MB of RAM.
+   Create a VM with the e2-standard-2 machine type. Configure the VM with 2 CPU cores and 8192MB of RAM.
 
 2. The script will:
    - Create a VM instance.
@@ -138,7 +138,7 @@ Build the Docker image locally and push it to Google Artifact Registry:
    - Accepts parameters for instance name, machine type, CPU cores, and RAM.
    - Creates a VM on GCP, attaches the startup script, and configures the VM to run the benchmark periodically.
 
-4. **`benchmark_execution.sh`**
+4. **benchmark_execution.sh**
    - Executes the benchmark inside the Docker container.
    - Logs the output and uploads it to GCS.
 
