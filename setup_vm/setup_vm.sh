@@ -7,6 +7,7 @@ CORES="$3"           # Number of CPU cores, e.g., "2"
 RAM="$4"             # RAM, e.g., "8GB" or "8192MB"
 PROJECT_ID="project_id"
 ZONE="us-central1-a"
+BUCKET_NAME="bucket"
 
 # Check if required arguments are provided
 if [ -z "$INSTANCE_NAME" ] || [ -z "$MACHINE_TYPE" ] || [ -z "$CORES" ] || [ -z "$RAM" ]; then
@@ -41,7 +42,7 @@ if [ "$MACHINE_TYPE" == "custom" ]; then
         --image-project=debian-cloud \
         --boot-disk-size=20GB \
         --scopes=https://www.googleapis.com/auth/cloud-platform \
-        --metadata=enable-oslogin=TRUE,startup-script-url=gs://bucket/scripts/startup_script.sh
+        --metadata=enable-oslogin=TRUE,startup-script-url=gs://$BUCKET_NAME/scripts/startup_script.sh
 else
     # For predefined machine types (e.g., e2-standard-2, n1-standard-4)
     gcloud compute instances create $INSTANCE_NAME \
@@ -52,7 +53,7 @@ else
         --image-project=debian-cloud \
         --boot-disk-size=20GB \
         --scopes=https://www.googleapis.com/auth/cloud-platform \
-        --metadata=enable-oslogin=TRUE,startup-script-url=gs://bucket/scripts/startup_script.sh
+        --metadata=enable-oslogin=TRUE,startup-script-url=gs://$BUCKET_NAME/scripts/startup_script.sh
 fi
 
 # Exponential Backoff for waiting for VM to initialize
