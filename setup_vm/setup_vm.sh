@@ -86,9 +86,3 @@ while true; do
     # Exponentially increase the delay (double the previous delay)
     DELAY=$((DELAY * 2))
 done
-
-# Add the cron job to run benchmark_execution.sh every 3 hours for myuser
-echo "*/3 * * * * $USER_HOME/benchmark/benchmark_execution.sh >> $USER_HOME/benchmark/benchmark_execution.log 2>&1" | crontab -u myuser -
-
-# Output to verify cron job
-echo "Cron job scheduled to run benchmark_execution.sh every 3 hours for myuser."
