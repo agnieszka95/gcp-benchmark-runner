@@ -17,9 +17,9 @@ This tool allows users to schedule and run benchmarks for the Plonky2 zk-SNARK l
 benchmark-tool/
 ├── Dockerfile                    # Docker file for building the Rust environment with dependencies
 ├── README.md                     # Documentation
-├── setup_vm/                     # Folder containing setup_vm related scripts
+├── setupvm/                      # Folder containing setup_vm related scripts
 │   └── setup_vm.sh               # Script to create a VM
-├── startup_script/               # Folder containing startup related scripts
+├── startup/                      # Folder containing startup related scripts
 │   └── startup_script.sh         # Startup script that configures VM, installs dependencies, and schedules cron job
 └── scripts/                      # Folder for any additional scripts
     └── benchmark_execution.sh    # Script that runs the benchmark and uploads the result to GCS
@@ -33,7 +33,7 @@ Before using this tool, ensure you have the following:
 
 ### Google Cloud Platform setup
 
-### GCP Setup
+### GCP setup
 
 1. **Enable APIs:** Ensure the following APIs are enabled in GCP project:
    - Compute Engine API
@@ -41,7 +41,7 @@ Before using this tool, ensure you have the following:
    - Cloud IAM API
    - Artifact Registry API
 
-2. **GCP CLI Installed:** Install and configure the GCP CLI on local machine:
+2. **GCP CLI installed:** Install and configure the GCP CLI on local machine:
    ```bash
    gcloud auth login
    gcloud config set project <project-id>
@@ -52,7 +52,7 @@ Before using this tool, ensure you have the following:
    - `roles/storage.admin`
 
 
-4. **Set Up an Artifact Registry**:
+4. **Set up an Artifact Registry**:
    Create a repository:
    ```bash
    gcloud artifacts repositories create plonky2-repo \
@@ -63,7 +63,7 @@ Before using this tool, ensure you have the following:
    gcloud auth configure-docker us-west1-docker.pkg.dev
    ```
 
-### Local Environment Setup
+### Local environment setup
 1. Install the Google Cloud SDK: [Installation Guide](https://cloud.google.com/sdk/docs/install) and Docker.
 2. Authenticate with your GCP account:
    ```bash
@@ -72,7 +72,7 @@ Before using this tool, ensure you have the following:
    ```
 3. Ensure the `setup_vm.sh` script is executable:
    ```bash
-   chmod +x scripts/setup_vm.sh
+   chmod +x setupvm/setup_vm.sh
    ```
 
 ---
@@ -104,7 +104,7 @@ Build the Docker image locally and push it to Artifact Registry:
 
 1. Execute the `setup_vm.sh` script to create the VM:
    ```bash
-   ./setup_vm/setup_vm.sh <INSTANCE_NAME> <MACHINE_TYPE> <CORES> <RAM>
+   ./setupvm/setup_vm.sh <INSTANCE_NAME> <MACHINE_TYPE> <CORES> <RAM>
    ```
    
    #### Parameters:
@@ -120,11 +120,11 @@ Build the Docker image locally and push it to Artifact Registry:
    #### Example:
    - **Custom Machine**:
      ```bash
-     ./setup_vm/setup_vm.sh benchmark-instance custom 4 8192MB
+     ./setupvm/setup_vm.sh benchmark-instance custom 4 8192MB
      ```
    - **Predefined Machine**:
      ```bash
-     ./setup_vm/setup_vm.sh benchmark-instance e2-standard-2 2 8192MB
+     ./setupvm/setup_vm.sh benchmark-instance e2-standard-2 2 8192MB
      ```
      
    This script sets up a VM in GCP and schedules the benchmark execution script.
@@ -174,7 +174,7 @@ The tool leverages the following components:
 2. **GCP test**:
    - Run the `setup_vm.sh` script with a test configuration:
      ```bash
-     ./scripts/setup_vm_and_schedule.sh test-instance custom 2 2048MB
+     ./setupvm/setup_vm.sh test-instance custom 2 2048MB
      ```
    - Verify that the VM is created and the startup script runs without errors.
 
