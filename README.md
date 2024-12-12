@@ -134,7 +134,7 @@ Build the Docker image locally and push it to Artifact Registry:
 
 1. Navigate to GCS bucket to view the benchmark logs:
    ```bash
-   gsutil ls gs://<bucket-name>/
+   gsutil ls gs://<bucket-name>/benchmark_output/<instance-name>
    ```
 
 ---
@@ -210,14 +210,15 @@ The tool leverages the following components:
    - Grant the `Cloud Build` service account (`[PROJECT_NUMBER]@cloudbuild.gserviceaccount.com`) the following roles:
      - `roles/artifactregistry.writer` (to push Docker images).
      - `roles/storage.objectAdmin` (to upload scripts to GCS).
-     - `roles/compute.admin` (if you want Cloud Build to create VMs).
+     - `roles/compute.admin` (Cloud Build to create VMs).
+       
    ```bash
    gcloud projects add-iam-policy-binding [PROJECT_ID] \
        --member="serviceAccount:[PROJECT_NUMBER]@cloudbuild.gserviceaccount.com" \
        --role="roles/artifactregistry.writer"
    ```
 
-3. **Artifact Registry Setup**:
+3. **Artifact Registry setup**:
    Create a repository in Artifact Registry to store the Docker image:
    ```bash
    gcloud artifacts repositories create plonky2-repo \
@@ -233,18 +234,18 @@ Create a `cloudbuild.yaml` file in your repository:
 steps:
   # Step 1: Build the Docker image
   - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "us-west1-docker.pkg.dev/$PROJECT_ID/plonky2-repo/plonky2-benchmarker:latest", "."]
+    args: ["build", "-t", "us-west1-docker.pkg.dev/$PROJECT_ID/plonky2-repo/plonky2-benchmarker:1.0.0", "."]
   
   # Step 2: Push the Docker image to Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
-    args: ["push", "us-west1-docker.pkg.dev/$PROJECT_ID/plonky2-repo/plonky2-benchmarker:latest"]
+    args: ["push", "us-west1-docker.pkg.dev/$PROJECT_ID/plonky2-repo/plonky2-benchmarker:1.0.0"]
 
   # Step 3: Upload scripts to GCS
   - name: "gcr.io/cloud-builders/gsutil"
     args: ["cp", "scripts/benchmark_execution.sh", "gs://$GCS_BUCKET_NAME/scripts/benchmark_execution.sh"]
 
   - name: "gcr.io/cloud-builders/gsutil"
-    args: ["cp", "setup_vm_and_schedule.sh", "gs://$GCS_BUCKET_NAME/scripts/setup_vm_and_schedule.sh"]
+    args: ["cp", "startup_script.sh", "gs://$GCS_BUCKET_NAME/scripts/setup_vm_and_schedule.sh"]
 
   # Step 4: (Optional) Create a VM to test the benchmark
   - name: "gcr.io/cloud-builders/gcloud"
@@ -265,12 +266,12 @@ substitutions:
   _GCS_BUCKET_NAME: "bucket-name"
   _PROJECT_ID: "project-id"
 images:
-  - "us-west1-docker.pkg.dev/$PROJECT_ID/plonky2-repo/plonky2-benchmarker:latest"
+  - "us-west1-docker.pkg.dev/$PROJECT_ID/plonky2-repo/plonky2-benchmarker:1.0.0"
 ```
 
-### Triggering the Build
+### Triggering the build
 
-1. **Create a Trigger**:
+1. **Create a trigger**:
    Use Cloud Build triggers to automate pipeline execution on code commits:
    ```bash
    gcloud beta builds triggers create github \
@@ -281,7 +282,7 @@ images:
        --build-config="cloudbuild.yaml"
    ```
 
-2. **Test the Trigger**:
+2. **Test the trigger**:
    Push code to the `main` branch or trigger the build manually:
    ```bash
    gcloud builds submit --config cloudbuild.yaml
@@ -298,14 +299,14 @@ images:
   ```
 ---
 
-## Known Limitations
+## Known limitations
 
 - The VM creation process assumes default network and firewall configurations.
 - Benchmark scheduling frequency is fixed in the script (every 3 hours).
 
 ---
 
-## Future Improvements
+## Future improvements
 
 - Add error handling to scripts.
 - Implement a dynamic schedule configuration for benchmarks -> Event-driven execution: trigger benchmarks based on events such as receiving a Pub/Sub message or an API request. Due to some restrictions I'm not able to use Cloud Functions/Cloud Run at the moment.
@@ -315,4 +316,4 @@ images:
 
 ## Contact
 
-Enjoy benchmarking with this tool!
+Enjoy benchmarking with this tool! Let me know if there are any questions.
