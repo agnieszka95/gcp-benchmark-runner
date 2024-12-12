@@ -64,7 +64,7 @@ Before using this tool, ensure you have the following:
    ```
 
 ### Local Environment Setup
-1. Install the Google Cloud SDK: [Installation Guide](https://cloud.google.com/sdk/docs/install and Docker.
+1. Install the Google Cloud SDK: [Installation Guide](https://cloud.google.com/sdk/docs/install) and Docker.
 2. Authenticate with your GCP account:
    ```bash
    gcloud auth login
