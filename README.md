@@ -41,16 +41,17 @@ Before using this tool, ensure you have the following:
    - Cloud IAM API
    - Artifact Registry API
 
-2. **GCP CLI installed:** Install and configure the GCP CLI on local machine:
+2. **GCP CLI installed:** Install and configure the GCP CLI and Docker on local machine:
    ```bash
    gcloud auth login
    gcloud config set project <project-id>
    ```
 
+   [Installation Guide](https://cloud.google.com/sdk/docs/install).
+
 3. **Permissions:** GCP account must have sufficient IAM permissions:
    - `roles/compute.admin`
    - `roles/storage.admin`
-
 
 4. **Set up an Artifact Registry**:
    Create a repository:
@@ -63,14 +64,8 @@ Before using this tool, ensure you have the following:
    gcloud auth configure-docker us-west1-docker.pkg.dev
    ```
 
-### Local environment setup
-1. Install the Google Cloud SDK: [Installation Guide](https://cloud.google.com/sdk/docs/install) and Docker.
-2. Authenticate with your GCP account:
-   ```bash
-   gcloud auth login
-   gcloud config set project YOUR_PROJECT_ID
-   ```
-3. Ensure the `setup_vm.sh` script is executable:
+5. **Ensure the `setup_vm.sh` script is executable**:
+   Create a repository:
    ```bash
    chmod +x setupvm/setup_vm.sh
    ```
