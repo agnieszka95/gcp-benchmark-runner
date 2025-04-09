@@ -15,6 +15,7 @@ This tool allows users to schedule and run benchmarks for the Plonky2 zk-SNARK l
 
 ```plaintext
 benchmark-tool/
+├── benchmark_gui.py              # Python GUI using GCP APIs
 ├── Dockerfile                    # Docker file for building the Rust environment with dependencies
 ├── README.md                     # Documentation
 ├── setupvm/                      # Folder containing setup_vm related scripts
@@ -68,6 +69,19 @@ Before using this tool, ensure you have the following:
    Create a repository:
    ```bash
    chmod +x setupvm/setup_vm.sh
+   ```
+
+### Install Python requirements
+   ```bash
+    pip install google-api-python-client google-auth google-cloud-storage
+   ```
+
+### Configure environment
+Update the following in benchmark_gui.py:
+
+   ```bash
+    PROJECT = 'your-gcp-project-id'
+    BUCKET_NAME = 'your-gcs-bucket'
    ```
 
 ---
